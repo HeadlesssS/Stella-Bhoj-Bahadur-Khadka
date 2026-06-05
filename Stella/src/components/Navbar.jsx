@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './community.css';
+import { BASE } from '../api';
 
 export default function Navbar({ user, onLogout, starData = [], onFlyToStar }) {
   const [query, setQuery] = useState('');
@@ -11,7 +12,7 @@ export default function Navbar({ user, onLogout, starData = [], onFlyToStar }) {
   // Fetch avatar whenever the logged-in user changes
   useEffect(() => {
     if (!user) { setAvatarUrl(null); return; }
-    fetch(`/api/profile/${encodeURIComponent(user.username)}/`)
+    fetch(`${BASE}/profile/${encodeURIComponent(user.username)}/`)
       .then(r => r.ok ? r.json() : null)
       .then(data => setAvatarUrl(data?.avatar_url || null))
       .catch(() => {});

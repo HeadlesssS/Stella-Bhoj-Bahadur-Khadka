@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Auth.css';
+import { BASE } from '../api';
 
 function Register({ onRegister, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -40,7 +41,7 @@ function Register({ onRegister, onSwitchToLogin }) {
     }
 
     try {
-      const response = await fetch('/api/register/', {
+      const response = await fetch(`${BASE}/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

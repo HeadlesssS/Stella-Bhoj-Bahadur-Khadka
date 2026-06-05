@@ -11,6 +11,7 @@ import Dashboard from "./components/Dashboard";
 import StarPanel from "./components/StarPanel";
 import ProfilePage from "./components/ProfilePage";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { BASE } from "./api";
 
 function XYZ(RAh, RAm, RAs, sign, DEd, DEm, DEs, prlx) {
   const ra = (15 * (RAh + RAm / 60 + RAs / 3600) * Math.PI) / 180;
@@ -66,6 +67,20 @@ function color(bv) {
   return new THREE.Color(1.0, 0.6, 0.5);
 }
 
+function colorSphere(bv) {
+  if (bv == null) return new THREE.Color(1, 1, 1);
+
+  // Vibrant colors for 3D star spheres
+  if (bv < -0.2) return new THREE.Color(0.3, 0.6, 1.0);      // Bright Blue
+  if (bv < 0.0) return new THREE.Color(0.5, 0.8, 1.0);       // Light Blue
+  if (bv < 0.3) return new THREE.Color(1.0, 1.0, 1.0);       // White
+  if (bv < 0.6) return new THREE.Color(1.0, 1.0, 0.5);       // Yellow
+  if (bv < 0.9) return new THREE.Color(1.0, 0.7, 0.2);       // Orange
+  if (bv < 1.3) return new THREE.Color(1.0, 0.5, 0.1);       // Dark Orange
+  
+  return new THREE.Color(1.0, 0.2, 0.0);                     // Red
+}
+
 function Size(vmag) {
   // Convert visual magnitude to point size (brighter = larger)
   // Vmag scale: lower = brighter
@@ -117,7 +132,7 @@ function App() {
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem("refresh_token");
     try {
-      await fetch("/api/logout/", {
+      await fetch(`${BASE}/logout/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -388,20 +403,38 @@ function App() {
 
     const hiddenPoints = new Set();
 
+    // for (let i = 0; i < 50; i++) {
+    //   const mat = new THREE.MeshStandardMaterial({
+    //     map: starTexture,
+    //     emissiveMap: starTexture,
+    //     emissive: new THREE.Color(1, 1, 1),
+    //     emissiveIntensity: 1.5,
+    //     color: new THREE.Color(255, 255, 255),
+    //   });
+    //   const mesh = new THREE.Mesh(CStarGeo, mat);
+    //   mesh.visible = false;
+    //   mesh.userData.starIndex = -1;
+    //   scene.add(mesh);
+    //   pool.push(mesh);
+    // }
+
     for (let i = 0; i < 50; i++) {
-      const mat = new THREE.MeshStandardMaterial({
-        map: starTexture,
-        emissiveMap: starTexture,
-        emissive: new THREE.Color(1, 1, 1),
-        emissiveIntensity: 1.5,
-        color: new THREE.Color(255, 255, 255),
-      });
-      const mesh = new THREE.Mesh(CStarGeo, mat);
-      mesh.visible = false;
-      mesh.userData.starIndex = -1;
-      scene.add(mesh);
-      pool.push(mesh);
-    }
+  const mat = new THREE.MeshStandardMaterial({
+    map: starTexture,
+    flatShading: true,
+    metalness: 0.3,
+    roughness: 0.4,
+    emissive: new THREE.Color(1, 1, 1),
+    emissiveMap: starTexture,
+    emissiveIntensity: 2.0,
+    color: new THREE.Color(1, 1, 1),
+  });
+  const mesh = new THREE.Mesh(CStarGeo, mat);
+  mesh.visible = false;
+  mesh.userData.starIndex = -1;
+  scene.add(mesh);
+  pool.push(mesh);
+}
 
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 1000;
@@ -499,7 +532,9 @@ function App() {
       }
       hiddenPoints.clear();
 
-      // LOD point sizes
+      // LOD 
+
+
       for (let i = 0; i < sizeAttr.count; i++) {
         const dist = frameDists[i];
         const base = sizes[i];
@@ -515,41 +550,35 @@ function App() {
       indices.sort((a, b) => frameDists[a] - frameDists[b]);
       const closest30 = indices.slice(0, 30);
 
-      // temporary, add right after closest30
-      console.log("closest star dist:", frameDists[closest30[0]]);
-      console.log("SPHERE_CUTOFF:", CStarnumber);
-      console.log("camera pos:", camPos.x, camPos.y, camPos.z);
+for (let i = 0; i < CStarnumber; i++) {
+  const mesh = pool[i];
+  const idx = closest30[i];
+  const dist = frameDists[idx];
 
-      // assign pool meshes
-      for (let i = 0; i < CStarnumber; i++) {
-        const mesh = pool[i];
-        const idx = closest30[i];
-        const dist = frameDists[idx];
+  mesh.position.set(
+    posAttr.array[idx * 3],
+    posAttr.array[idx * 3 + 1],
+    posAttr.array[idx * 3 + 2],
+  );
 
-        mesh.position.set(
-          posAttr.array[idx * 3],
-          posAttr.array[idx * 3 + 1],
-          posAttr.array[idx * 3 + 2],
-        );
+  mesh.rotation.y += 0.001;
+  mesh.rotation.x += 0.001;
 
-        // slow rotation like your sun code
-        mesh.rotation.y += 0.001;
-        mesh.rotation.x += 0.001;
+  // Get vibrant color based on B-V color index
+  const starColor = colorSphere(starData[idx]?.bv);
+  
+  // Apply color to both base color and emissive for bright appearance
+  mesh.material.color.copy(starColor);
+  mesh.material.emissive.copy(starColor);
+  mesh.material.emissiveIntensity = 3.5;  // Increased for more glow
 
-        // tint by B-V color
-        mesh.material.color.set(color(starData[idx]?.bv));
+  mesh.scale.setScalar(sizes[idx] * 0.15);
+  mesh.visible = true;
+  mesh.userData.starIndex = idx;
 
-        // scale — your scale is 0.1 now, sizes are 0.5–50
-        mesh.scale.setScalar(sizes[idx] * 0.15);
-
-        mesh.visible = true;
-        mesh.userData.starIndex = idx;
-
-        // hide point underneath
-        sizeAttr.array[idx] = 0;
-        hiddenPoints.add(idx);
-      }
-
+  sizeAttr.array[idx] = 0;
+  hiddenPoints.add(idx);
+}
       sizeAttr.needsUpdate = true;
 
       // Check if we need to initiate a fly to a searched star

@@ -22,7 +22,6 @@ function timeSince(dateStr) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-// Format an ISO date string as "Aug 12, 2026"
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');

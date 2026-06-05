@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './community.css';
 
 import {
+  BASE,
   isStarSaved, saveStar, unsaveStar,
   getStarPosts, createPost, deletePost, toggleLike,
   getComments, addComment, deleteComment,
@@ -196,8 +197,6 @@ function CommunityTab({ star, currentUser, onUsernameClick }) {
   );
 }
 
-// ── AI Chat Tab ────────────────────────────────────────────────────────────
-// Receives messages/setMessages from StarPanel so history survives tab switches
 function ChatTab({ star, messages, setMessages }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -210,7 +209,7 @@ function ChatTab({ star, messages, setMessages }) {
     const txt = input; setInput(''); setBusy(true);
     setMessages(prev => [...prev, { role: 'user', content: txt }]);
     try {
-      const res = await fetch('/api/chat/', {
+      const res = await fetch(`${BASE}/chat/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: txt, star: { name: star.name, bv: star.bv, vmag: star.vmag, distance: star.distance, ra: star.ra, dec: star.dec } }),
@@ -221,7 +220,6 @@ function ChatTab({ star, messages, setMessages }) {
     setBusy(false);
   };
 
-  // Prevent typing in chat input from triggering camera movement
   const handleKeyDown = (e) => {
     e.stopPropagation();
     if (e.key === 'Enter') send();
@@ -249,7 +247,6 @@ function ChatTab({ star, messages, setMessages }) {
   );
 }
 
-// ── Main StarPanel ─────────────────────────────────────────────────────────
 export default function StarPanel({ star, user, onClose }) {
   const [tab, setTab] = useState('info');
   const [saved, setSaved] = useState(false);
@@ -259,7 +256,6 @@ export default function StarPanel({ star, user, onClose }) {
   const [chatMessages, setChatMessages] = useState(() => chatSessionCache[star.name] || []);
   const navigate = useNavigate();
 
-  // Sync chat messages to the session cache whenever they change
   useEffect(() => {
     chatSessionCache[star.name] = chatMessages;
   }, [chatMessages, star.name]);
@@ -269,10 +265,9 @@ export default function StarPanel({ star, user, onClose }) {
     setChatMessages(chatSessionCache[star.name] || []);
   }, [star.name]);
 
-  // border color based on B-V
   const borderColor = (() => {
     const bv = star.bv;
-    if (bv == null) return '#4a90e2';
+    if (bv == null) return '#ffffff';
     if (bv < 0) return '#6ab4ff';
     if (bv < 0.6) return '#f0c040';
     return '#ff8844';
