@@ -36,6 +36,10 @@ class ChatAPITest(TestCase):
         self.assertIn('reply', response.data)
         self.assertEqual(response.data['reply'], "Sirius is the brightest star in the night sky.")
         mock_groq_client.chat.completions.create.assert_called_once()
+        self.assertEqual(
+            mock_groq_client.chat.completions.create.call_args.kwargs['model'],
+            'openai/gpt-oss-120b',
+        )
 
 
 class EventTest(TestCase):

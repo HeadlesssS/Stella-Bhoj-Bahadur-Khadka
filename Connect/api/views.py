@@ -104,7 +104,7 @@ class ChatView(APIView):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_msg},
             ],
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
         )
         return Response({'reply': chat_completion.choices[0].message.content})
 
@@ -368,5 +368,4 @@ class AstronomicalEventListView(generics.ListAPIView):
 
     def get_queryset(self):
         return AstronomicalEvent.objects.filter(is_active=True)
-
 
