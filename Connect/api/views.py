@@ -80,7 +80,7 @@ class LogoutView(APIView):
 from groq import Groq
 from decouple import config
 
-_groq_client = Groq(api_key=config('GROQ_API_KEY'))
+_groq_client = Groq(api_key=config('GROQ_API_KEY', default='missing'))
 
 class ChatView(APIView):
     permission_classes = [AllowAny]

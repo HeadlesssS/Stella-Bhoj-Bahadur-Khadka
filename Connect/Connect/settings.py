@@ -27,6 +27,7 @@ SECRET_KEY = os.environ.get(
     'django-insecure-it*&apefc&ygorz4y^89ny@n@5#&v$(3pkaoaq(u&eu=n4vsb7',
 )
 
+
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
@@ -197,3 +198,8 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+
+if os.environ.get('CLOUDINARY_URL'):
+       INSTALLED_APPS = ['cloudinary_storage'] + INSTALLED_APPS + ['cloudinary']
+       STORAGES['default'] = {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'}
