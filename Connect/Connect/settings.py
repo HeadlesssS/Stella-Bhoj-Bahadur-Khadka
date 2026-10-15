@@ -201,5 +201,5 @@ SIMPLE_JWT = {
 
 
 if os.environ.get('CLOUDINARY_URL'):
-       INSTALLED_APPS = ['cloudinary_storage'] + INSTALLED_APPS + ['cloudinary']
+       INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
        STORAGES['default'] = {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'}
